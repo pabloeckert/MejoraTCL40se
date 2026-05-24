@@ -8,24 +8,28 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0a0a0f;
-      --bg2: #12121a;
-      --bg3: #1a1a26;
-      --cyan: #00f5ff;
-      --magenta: #ff006e;
-      --text: #e0e0f0;
-      --text-dim: #6a6a8a;
-      --ok: #00ff88;
-      --err: #ff3355;
-      --border: rgba(0,245,255,0.15);
+      --bg: #f0f2f5;
+      --bg2: #ffffff;
+      --bg3: #f8f9fb;
+      --accent: #1d4ed8;
+      --accent-light: #eff6ff;
+      --accent-hover: #1e40af;
+      --text: #111827;
+      --text-dim: #6b7280;
+      --ok: #15803d;
+      --ok-bg: #f0fdf4;
+      --err: #b91c1c;
+      --err-bg: #fef2f2;
+      --border: #e5e7eb;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
     }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'Segoe UI', system-ui, monospace;
+      font-family: 'Segoe UI', system-ui, sans-serif;
       min-height: 100vh;
-      padding: 24px 16px 48px;
+      padding: 32px 16px 56px;
     }
 
     header {
@@ -34,38 +38,34 @@
     }
 
     header h1 {
-      font-size: 2rem;
-      font-weight: 800;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      background: linear-gradient(90deg, var(--cyan), var(--magenta));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text);
     }
 
     header p {
       color: var(--text-dim);
-      font-size: 0.85rem;
+      font-size: 0.875rem;
       margin-top: 6px;
-      letter-spacing: 1px;
     }
 
-    .container { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    .container { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 
     .card {
       background: var(--bg2);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 20px 24px;
+      box-shadow: var(--shadow);
     }
 
     .card-title {
       font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 2px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--cyan);
+      color: var(--text-dim);
       margin-bottom: 16px;
     }
 
@@ -78,83 +78,85 @@
     }
 
     .status-dot {
-      width: 10px; height: 10px;
+      width: 9px; height: 9px;
       border-radius: 50%;
-      background: var(--text-dim);
+      background: #d1d5db;
       flex-shrink: 0;
-      transition: background 0.3s, box-shadow 0.3s;
+      transition: background 0.3s;
     }
-    .status-dot.connected { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
-    .status-dot.error { background: var(--err); box-shadow: 0 0 8px var(--err); }
+    .status-dot.connected { background: #16a34a; }
+    .status-dot.error { background: #dc2626; }
 
     #status-text { font-size: 0.9rem; color: var(--text-dim); flex: 1; }
-    #device-model { font-size: 0.85rem; color: var(--cyan); font-weight: 600; }
+    #device-model { font-size: 0.85rem; color: var(--accent); font-weight: 600; }
 
     /* --- BUTTONS --- */
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 10px 20px;
+      padding: 9px 18px;
       border: none;
       border-radius: 8px;
       font-size: 0.85rem;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.15s;
     }
 
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
     .btn-cyan {
-      background: transparent;
-      border: 1.5px solid var(--cyan);
-      color: var(--cyan);
+      background: var(--accent-light);
+      border: 1px solid #bfdbfe;
+      color: var(--accent);
     }
-    .btn-cyan:hover:not(:disabled) { background: rgba(0,245,255,0.1); box-shadow: 0 0 12px rgba(0,245,255,0.3); }
+    .btn-cyan:hover:not(:disabled) { background: #dbeafe; border-color: #93c5fd; }
 
     .btn-primary {
-      background: linear-gradient(135deg, var(--cyan), #0088cc);
-      color: #000;
-      font-size: 1rem;
-      padding: 14px 32px;
-      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 12px 28px;
+      border-radius: 8px;
     }
-    .btn-primary:hover:not(:disabled) { filter: brightness(1.15); box-shadow: 0 0 20px rgba(0,245,255,0.4); }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
 
     .btn-danger {
-      background: transparent;
-      border: 1.5px solid var(--magenta);
-      color: var(--magenta);
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
     }
-    .btn-danger:hover:not(:disabled) { background: rgba(255,0,110,0.1); box-shadow: 0 0 12px rgba(255,0,110,0.3); }
+    .btn-danger:hover:not(:disabled) { background: #fee2e2; border-color: #fca5a5; }
 
     /* --- TOGGLES --- */
-    .toggle-list { display: flex; flex-direction: column; gap: 14px; }
+    .toggle-list { display: flex; flex-direction: column; gap: 10px; }
 
     .toggle-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      padding: 14px 18px;
+      padding: 14px 16px;
       background: var(--bg3);
-      border-radius: 10px;
-      border: 1px solid transparent;
-      transition: border-color 0.2s;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      transition: border-color 0.2s, background 0.2s;
     }
-    .toggle-item.active { border-color: rgba(0,245,255,0.25); }
+    .toggle-item.active {
+      background: var(--accent-light);
+      border-color: #bfdbfe;
+    }
 
     .toggle-info { flex: 1; }
-    .toggle-label { font-size: 0.95rem; font-weight: 600; }
+    .toggle-label { font-size: 0.9rem; font-weight: 600; color: var(--text); }
     .toggle-desc { font-size: 0.75rem; color: var(--text-dim); margin-top: 3px; }
 
     .toggle-switch {
       position: relative;
-      width: 50px;
-      height: 28px;
+      width: 48px;
+      height: 26px;
       flex-shrink: 0;
     }
 
@@ -167,49 +169,43 @@
     .toggle-track {
       position: absolute;
       inset: 0;
-      background: #2a2a3a;
-      border-radius: 14px;
+      background: #d1d5db;
+      border-radius: 13px;
       cursor: pointer;
-      transition: background 0.25s;
+      transition: background 0.2s;
     }
 
     .toggle-track::after {
       content: '';
       position: absolute;
-      top: 4px;
-      left: 4px;
+      top: 3px;
+      left: 3px;
       width: 20px;
       height: 20px;
       border-radius: 50%;
-      background: #5a5a7a;
-      transition: transform 0.25s, background 0.25s;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
     }
 
-    .toggle-switch input:checked + .toggle-track {
-      background: rgba(0,245,255,0.25);
-    }
-
-    .toggle-switch input:checked + .toggle-track::after {
-      transform: translateX(22px);
-      background: var(--cyan);
-      box-shadow: 0 0 8px var(--cyan);
-    }
+    .toggle-switch input:checked + .toggle-track { background: var(--accent); }
+    .toggle-switch input:checked + .toggle-track::after { transform: translateX(22px); }
 
     /* --- PREVIEW --- */
     .preview-block {
-      background: #0d0d15;
+      background: var(--bg3);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 16px;
+      padding: 14px 16px;
       font-family: 'Consolas', 'Courier New', monospace;
       font-size: 0.78rem;
-      color: #aaccff;
+      color: #374151;
       min-height: 80px;
-      max-height: 260px;
+      max-height: 240px;
       overflow-y: auto;
       white-space: pre-wrap;
       word-break: break-all;
-      line-height: 1.6;
+      line-height: 1.7;
     }
 
     .preview-empty { color: var(--text-dim); font-style: italic; }
@@ -217,19 +213,20 @@
     .preview-actions {
       display: flex;
       justify-content: flex-end;
+      align-items: center;
       margin-top: 10px;
     }
 
     /* --- LOG --- */
     .log-block {
-      background: #0d0d15;
+      background: var(--bg3);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 16px;
+      padding: 14px 16px;
       font-family: 'Consolas', 'Courier New', monospace;
       font-size: 0.78rem;
       min-height: 100px;
-      max-height: 300px;
+      max-height: 280px;
       overflow-y: auto;
       line-height: 1.7;
     }
@@ -238,14 +235,14 @@
     .log-tag { font-weight: 700; flex-shrink: 0; }
     .log-tag.ok { color: var(--ok); }
     .log-tag.err { color: var(--err); }
-    .log-tag.info { color: var(--cyan); }
-    .log-cmd { color: #aaccff; }
+    .log-tag.info { color: var(--accent); }
+    .log-cmd { color: #374151; }
     .log-out { color: var(--text-dim); margin-left: 20px; font-size: 0.73rem; }
 
     /* --- PROGRESS --- */
     .progress-wrap {
-      height: 6px;
-      background: #1a1a26;
+      height: 5px;
+      background: #e5e7eb;
       border-radius: 3px;
       overflow: hidden;
       margin-top: 14px;
@@ -254,7 +251,7 @@
     .progress-bar {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, var(--cyan), var(--magenta));
+      background: var(--accent);
       border-radius: 3px;
       transition: width 0.3s ease;
     }
@@ -262,7 +259,7 @@
     /* --- EXECUTE ACTIONS --- */
     .exec-actions {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
       align-items: center;
       margin-bottom: 16px;
@@ -271,31 +268,31 @@
     /* --- INSTRUCTIONS --- */
     details {
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
+      background: var(--bg2);
+      box-shadow: var(--shadow);
     }
 
     summary {
       padding: 14px 20px;
       cursor: pointer;
-      font-size: 0.8rem;
-      font-weight: 700;
-      letter-spacing: 1px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
       color: var(--text-dim);
       user-select: none;
-      background: var(--bg2);
       list-style: none;
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
-    summary::before { content: '▶'; font-size: 0.65rem; transition: transform 0.2s; }
+    summary::before { content: '▶'; font-size: 0.6rem; transition: transform 0.2s; }
     details[open] summary::before { transform: rotate(90deg); }
 
     .instructions-body {
-      background: var(--bg2);
       padding: 20px 24px;
       border-top: 1px solid var(--border);
     }
@@ -312,18 +309,18 @@
       width: 26px;
       height: 26px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--cyan), var(--magenta));
-      color: #000;
+      background: var(--accent);
+      color: #fff;
       font-size: 0.75rem;
-      font-weight: 800;
+      font-weight: 700;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
     }
 
-    .step-text { font-size: 0.88rem; line-height: 1.6; color: var(--text); }
-    .step-text strong { color: var(--cyan); }
+    .step-text { font-size: 0.875rem; line-height: 1.65; color: var(--text); }
+    .step-text strong { color: var(--accent); font-weight: 600; }
 
     /* --- COPY FEEDBACK --- */
     .copied-msg {
@@ -336,7 +333,7 @@
     .copied-msg.show { opacity: 1; }
 
     @media (max-width: 480px) {
-      header h1 { font-size: 1.4rem; }
+      header h1 { font-size: 1.35rem; }
       .card { padding: 16px; }
       .btn-primary { width: 100%; justify-content: center; }
     }
@@ -443,7 +440,7 @@
       <div class="progress-bar" id="progress-bar"></div>
     </div>
     <div class="log-block" id="log-block" style="margin-top:14px;">
-      <span style="color:var(--text-dim); font-style:italic; font-size:0.78rem;">El log aparecerá aquí al ejecutar...</span>
+      <span style="color:#9ca3af; font-style:italic; font-size:0.78rem;">El log aparecerá aquí al ejecutar...</span>
     </div>
   </div>
 
