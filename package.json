@@ -1,0 +1,12 @@
+{
+  "name": "mejora-tcl40se",
+  "version": "1.0.0",
+  "description": "Optimizador ADB para TCL 40 SE",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

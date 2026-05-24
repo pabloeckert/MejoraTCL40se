@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TCL 40 SE Optimizer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --bg2: #12121a;
+      --bg3: #1a1a26;
+      --cyan: #00f5ff;
+      --magenta: #ff006e;
+      --text: #e0e0f0;
+      --text-dim: #6a6a8a;
+      --ok: #00ff88;
+      --err: #ff3355;
+      --border: rgba(0,245,255,0.15);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, monospace;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, var(--cyan), var(--magenta));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header p {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin-top: 6px;
+      letter-spacing: 1px;
+    }
+
+    .container { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+
+    .card-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 16px;
+    }
+
+    /* --- STATUS --- */
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .status-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      flex-shrink: 0;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .status-dot.connected { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+    .status-dot.error { background: var(--err); box-shadow: 0 0 8px var(--err); }
+
+    #status-text { font-size: 0.9rem; color: var(--text-dim); flex: 1; }
+    #device-model { font-size: 0.85rem; color: var(--cyan); font-weight: 600; }
+
+    /* --- BUTTONS --- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-cyan {
+      background: transparent;
+      border: 1.5px solid var(--cyan);
+      color: var(--cyan);
+    }
+    .btn-cyan:hover:not(:disabled) { background: rgba(0,245,255,0.1); box-shadow: 0 0 12px rgba(0,245,255,0.3); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cyan), #0088cc);
+      color: #000;
+      font-size: 1rem;
+      padding: 14px 32px;
+      border-radius: 10px;
+    }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.15); box-shadow: 0 0 20px rgba(0,245,255,0.4); }
+
+    .btn-danger {
+      background: transparent;
+      border: 1.5px solid var(--magenta);
+      color: var(--magenta);
+    }
+    .btn-danger:hover:not(:disabled) { background: rgba(255,0,110,0.1); box-shadow: 0 0 12px rgba(255,0,110,0.3); }
+
+    /* --- TOGGLES --- */
+    .toggle-list { display: flex; flex-direction: column; gap: 14px; }
+
+    .toggle-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px;
+      background: var(--bg3);
+      border-radius: 10px;
+      border: 1px solid transparent;
+      transition: border-color 0.2s;
+    }
+    .toggle-item.active { border-color: rgba(0,245,255,0.25); }
+
+    .toggle-info { flex: 1; }
+    .toggle-label { font-size: 0.95rem; font-weight: 600; }
+    .toggle-desc { font-size: 0.75rem; color: var(--text-dim); margin-top: 3px; }
+
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0; height: 0;
+      position: absolute;
+    }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: #2a2a3a;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background 0.25s;
+    }
+
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #5a5a7a;
+      transition: transform 0.25s, background 0.25s;
+    }
+
+    .toggle-switch input:checked + .toggle-track {
+      background: rgba(0,245,255,0.25);
+    }
+
+    .toggle-switch input:checked + .toggle-track::after {
+      transform: translateX(22px);
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+    }
+
+    /* --- PREVIEW --- */
+    .preview-block {
+      background: #0d0d15;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.78rem;
+      color: #aaccff;
+      min-height: 80px;
+      max-height: 260px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.6;
+    }
+
+    .preview-empty { color: var(--text-dim); font-style: italic; }
+
+    .preview-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 10px;
+    }
+
+    /* --- LOG --- */
+    .log-block {
+      background: #0d0d15;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.78rem;
+      min-height: 100px;
+      max-height: 300px;
+      overflow-y: auto;
+      line-height: 1.7;
+    }
+
+    .log-line { display: flex; gap: 8px; }
+    .log-tag { font-weight: 700; flex-shrink: 0; }
+    .log-tag.ok { color: var(--ok); }
+    .log-tag.err { color: var(--err); }
+    .log-tag.info { color: var(--cyan); }
+    .log-cmd { color: #aaccff; }
+    .log-out { color: var(--text-dim); margin-left: 20px; font-size: 0.73rem; }
+
+    /* --- PROGRESS --- */
+    .progress-wrap {
+      height: 6px;
+      background: #1a1a26;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 14px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--cyan), var(--magenta));
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    /* --- EXECUTE ACTIONS --- */
+    .exec-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    /* --- INSTRUCTIONS --- */
+    details {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    summary {
+      padding: 14px 20px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      user-select: none;
+      background: var(--bg2);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    summary::before { content: '▶'; font-size: 0.65rem; transition: transform 0.2s; }
+    details[open] summary::before { transform: rotate(90deg); }
+
+    .instructions-body {
+      background: var(--bg2);
+      padding: 20px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .step {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .step:last-child { margin-bottom: 0; }
+
+    .step-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--magenta));
+      color: #000;
+      font-size: 0.75rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-text { font-size: 0.88rem; line-height: 1.6; color: var(--text); }
+    .step-text strong { color: var(--cyan); }
+
+    /* --- COPY FEEDBACK --- */
+    .copied-msg {
+      font-size: 0.75rem;
+      color: var(--ok);
+      opacity: 0;
+      transition: opacity 0.3s;
+      margin-right: 8px;
+    }
+    .copied-msg.show { opacity: 1; }
+
+    @media (max-width: 480px) {
+      header h1 { font-size: 1.4rem; }
+      .card { padding: 16px; }
+      .btn-primary { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>TCL 40 SE Optimizer</h1>
+  <p>Optimización ADB para gaming y rendimiento</p>
+</header>
+
+<div class="container">
+
+  <!-- CONEXIÓN -->
+  <div class="card">
+    <div class="card-title">Estado de Conexión</div>
+    <div class="status-row">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">Desconectado</span>
+      <span id="device-model"></span>
+      <button class="btn btn-cyan" id="btn-connect" onclick="detectDevice()">
+        Detectar TCL 40 SE
+      </button>
+    </div>
+  </div>
+
+  <!-- OPCIONES -->
+  <div class="card">
+    <div class="card-title">Opciones de Optimización</div>
+    <div class="toggle-list">
+
+      <div class="toggle-item" id="item-fps">
+        <div class="toggle-info">
+          <div class="toggle-label">Maximizar FPS</div>
+          <div class="toggle-desc">Elimina animaciones del sistema, desactiva ahorro de energía y limpia procesos</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-fps" onchange="onToggle()">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+      <div class="toggle-item" id="item-hitbox">
+        <div class="toggle-info">
+          <div class="toggle-label">Modo Hitbox Extendido</div>
+          <div class="toggle-desc">Resolución 540p + DPI 320 para hitboxes más amplios en juegos competitivos</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-hitbox" onchange="onToggle()">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+      <div class="toggle-item" id="item-hz90">
+        <div class="toggle-info">
+          <div class="toggle-label">Forzar 90Hz</div>
+          <div class="toggle-desc">Fuerza la pantalla a 90 Hz mínimo y máximo para mayor fluidez</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-hz90" onchange="onToggle()">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+      <div class="toggle-item" id="item-network">
+        <div class="toggle-info">
+          <div class="toggle-label">Optimización de Red</div>
+          <div class="toggle-desc">Desactiva sleep del Wi-Fi y ajusta buffer TCP para menor latencia</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-network" onchange="onToggle()">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="card">
+    <div class="card-title">Preview de Comandos</div>
+    <div class="preview-block" id="preview-block">
+      <span class="preview-empty">Activá al menos una opción para ver los comandos...</span>
+    </div>
+    <div class="preview-actions">
+      <span class="copied-msg" id="copied-msg">¡Copiado!</span>
+      <button class="btn btn-cyan" onclick="copyCommands()">Copiar</button>
+    </div>
+  </div>
+
+  <!-- EJECUCIÓN -->
+  <div class="card">
+    <div class="card-title">Ejecución</div>
+    <div class="exec-actions">
+      <button class="btn btn-primary" id="btn-apply" onclick="applyCommands()">
+        ▶ APLICAR
+      </button>
+      <button class="btn btn-danger" id="btn-revert" onclick="revertAll()">
+        ⏹ REVERTIR TODO
+      </button>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="log-block" id="log-block" style="margin-top:14px;">
+      <span style="color:var(--text-dim); font-style:italic; font-size:0.78rem;">El log aparecerá aquí al ejecutar...</span>
+    </div>
+  </div>
+
+  <!-- INSTRUCCIONES -->
+  <details>
+    <summary>Instrucciones para no técnicos</summary>
+    <div class="instructions-body">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          Entrá a <strong>Ajustes → Sobre el teléfono</strong> y tocá <strong>Número de compilación</strong> 7 veces seguidas hasta que diga "Eres desarrollador".
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          Volvé a <strong>Ajustes → Sistema → Opciones de desarrollador</strong> y activá <strong>Depuración USB</strong>.
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          Conectá el TCL 40 SE a la PC con un cable USB. En el teléfono va a aparecer un cuadro preguntando si confiás en esta computadora: tocá <strong>Aceptar / Permitir</strong>.
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">
+          Hacé doble clic en <strong>start.bat</strong> para iniciar la aplicación, o usá el botón <strong>"Detectar TCL 40 SE"</strong> para verificar la conexión.
+        </div>
+      </div>
+    </div>
+  </details>
+
+</div>
+
+<script>
+  const COMMANDS = {
+    fps: [
+      'adb shell settings put global window_animation_scale 0',
+      'adb shell settings put global transition_animation_scale 0',
+      'adb shell settings put global animator_duration_scale 0',
+      'adb shell settings put global low_power 0',
+      'adb shell dumpsys deviceidle disable',
+      'adb shell am kill-all',
+    ],
+    hitbox: [
+      'adb shell wm size 540x960',
+      'adb shell wm density 320',
+    ],
+    hz90: [
+      'adb shell settings put system peak_refresh_rate 90',
+      'adb shell settings put system min_refresh_rate 90',
+    ],
+    network: [
+      'adb shell settings put global wifi_sleep_policy 2',
+      'adb shell settings put global tcp_default_init_rwnd 60',
+    ],
+  };
+
+  function getSelectedCommands() {
+    const cmds = [];
+    if (document.getElementById('toggle-fps').checked) cmds.push(...COMMANDS.fps);
+    if (document.getElementById('toggle-hitbox').checked) cmds.push(...COMMANDS.hitbox);
+    if (document.getElementById('toggle-hz90').checked) cmds.push(...COMMANDS.hz90);
+    if (document.getElementById('toggle-network').checked) cmds.push(...COMMANDS.network);
+    return cmds;
+  }
+
+  function onToggle() {
+    const keys = ['fps', 'hitbox', 'hz90', 'network'];
+    keys.forEach(k => {
+      const item = document.getElementById('item-' + k);
+      const checked = document.getElementById('toggle-' + k).checked;
+      item.classList.toggle('active', checked);
+    });
+    updatePreview();
+  }
+
+  function updatePreview() {
+    const preview = document.getElementById('preview-block');
+    const cmds = getSelectedCommands();
+    if (cmds.length === 0) {
+      preview.innerHTML = '<span class="preview-empty">Activá al menos una opción para ver los comandos...</span>';
+    } else {
+      preview.textContent = cmds.join('\n');
+    }
+  }
+
+  function copyCommands() {
+    const cmds = getSelectedCommands();
+    if (cmds.length === 0) return;
+    navigator.clipboard.writeText(cmds.join('\n')).then(() => {
+      const msg = document.getElementById('copied-msg');
+      msg.classList.add('show');
+      setTimeout(() => msg.classList.remove('show'), 1800);
+    });
+  }
+
+  async function detectDevice() {
+    const dot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+    const modelEl = document.getElementById('device-model');
+    const btn = document.getElementById('btn-connect');
+
+    btn.disabled = true;
+    statusText.textContent = 'Detectando...';
+    dot.className = 'status-dot';
+    modelEl.textContent = '';
+
+    try {
+      const res = await fetch('/api/connect', { method: 'POST' });
+      const data = await res.json();
+
+      if (data.success && data.count > 0) {
+        dot.className = 'status-dot connected';
+        statusText.textContent = 'Conectado';
+        modelEl.textContent = data.devices[0].model !== 'Desconocido'
+          ? data.devices[0].model
+          : data.devices[0].id;
+      } else {
+        dot.className = 'status-dot error';
+        statusText.textContent = 'No se encontró ningún dispositivo';
+        modelEl.textContent = '';
+      }
+    } catch (e) {
+      dot.className = 'status-dot error';
+      statusText.textContent = 'Error: ' + e.message;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function clearLog() {
+    const log = document.getElementById('log-block');
+    log.innerHTML = '';
+    return log;
+  }
+
+  function appendLog(log, tag, tagClass, cmd, output) {
+    const line = document.createElement('div');
+    line.className = 'log-line';
+
+    const tagEl = document.createElement('span');
+    tagEl.className = 'log-tag ' + tagClass;
+    tagEl.textContent = '[' + tag + ']';
+
+    const cmdEl = document.createElement('span');
+    cmdEl.className = 'log-cmd';
+    cmdEl.textContent = cmd;
+
+    line.appendChild(tagEl);
+    line.appendChild(cmdEl);
+    log.appendChild(line);
+
+    if (output) {
+      const outEl = document.createElement('div');
+      outEl.className = 'log-out';
+      outEl.textContent = output;
+      log.appendChild(outEl);
+    }
+
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function setProgress(val) {
+    document.getElementById('progress-bar').style.width = val + '%';
+  }
+
+  async function streamExec(url, body, onDone) {
+    const btnApply = document.getElementById('btn-apply');
+    const btnRevert = document.getElementById('btn-revert');
+    btnApply.disabled = true;
+    btnRevert.disabled = true;
+
+    const log = clearLog();
+    setProgress(0);
+
+    let total = 0;
+    let done = 0;
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: body ? { 'Content-Type': 'application/json' } : {},
+        body: body ? JSON.stringify(body) : undefined,
+      });
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { value, done: streamDone } = await reader.read();
+        if (streamDone) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop();
+
+        for (const part of parts) {
+          const line = part.replace(/^data: /, '').trim();
+          if (!line) continue;
+          try {
+            const evt = JSON.parse(line);
+
+            if (evt.type === 'start') {
+              total = evt.total;
+              appendLog(log, 'INICIO', 'info', `Ejecutando ${total} comando(s)...`);
+            } else if (evt.type === 'progress') {
+              appendLog(log, '...', 'info', evt.cmd);
+            } else if (evt.type === 'result') {
+              done++;
+              if (evt.success) {
+                appendLog(log, 'OK', 'ok', evt.cmd, evt.output || null);
+              } else {
+                appendLog(log, 'ERROR', 'err', evt.cmd, evt.error || evt.output || null);
+              }
+              setProgress(total > 0 ? Math.round((done / total) * 100) : 0);
+            } else if (evt.type === 'done') {
+              appendLog(log, 'LISTO', 'ok', `${done}/${evt.total} comandos ejecutados`);
+              setProgress(100);
+              if (onDone) onDone();
+            }
+          } catch (_) {}
+        }
+      }
+    } catch (e) {
+      appendLog(log, 'ERROR', 'err', 'Falló la conexión con el servidor: ' + e.message);
+    } finally {
+      btnApply.disabled = false;
+      btnRevert.disabled = false;
+    }
+  }
+
+  function applyCommands() {
+    const cmds = getSelectedCommands();
+    if (cmds.length === 0) {
+      alert('Seleccioná al menos una opción primero.');
+      return;
+    }
+    streamExec('/api/execute', { commands: cmds }, null);
+  }
+
+  function revertAll() {
+    streamExec('/api/revert', null, null);
+  }
+
+  // Verificar estado ADB al cargar
+  fetch('/api/status').then(r => r.json()).then(data => {
+    if (data.adbAvailable && data.device) {
+      document.getElementById('status-dot').className = 'status-dot connected';
+      document.getElementById('status-text').textContent = 'Conectado';
+      document.getElementById('device-model').textContent = data.device.model || '';
+    }
+  }).catch(() => {});
+</script>
+
+</body>
+</html>
