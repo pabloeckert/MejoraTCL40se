@@ -20,6 +20,15 @@ A minimal two-file web app that wraps ADB commands in a browser UI:
 
 - **`public/index.html`** — Single-file frontend (inline CSS + vanilla JS, no framework). Consumes the SSE stream by reading `ReadableStream` chunks directly, parsing `data: {...}\n\n` frames manually.
 
+## Device registry and usage history
+
+Because more than one physical device of the same model can be used with this tool, `server.js` persists per-device state to disk under `data/` (gitignored — contains another person's usage data):
+
+- `data/devices.json` — registry keyed by ADB serial: `{ owner, model, firstSeen, lastSeen }`. `owner` is set manually via `POST /api/devices/:serial/name` (the frontend prompts for it after a successful `/api/connect`) and is `null` until named.
+- `data/history.jsonl` — append-only, one JSON object per line. A new entry is written every time `/api/connect` finds a connected device, capturing a usage snapshot (`batteryLevel`, `memTotalMB`/`memFreeMB`/`memAvailableMB` parsed from `/proc/meminfo`, `storage` parsed from `df /data`) alongside the serial/owner/model at that moment. `GET /api/history` reads and returns this file (optionally filtered by `?serial=`, capped by `?limit=`, default 50, newest first) for the frontend's "Historial de Mantenimiento" card.
+
+`getUsageSnapshot(serial)` runs its three `adb -s <serial> shell ...` reads in parallel via `Promise.all`; it's called synchronously inside the `/api/connect` device loop, so connecting with multiple devices attached takes proportionally longer.
+
 ## Key design detail: duplicated COMMANDS object
 
 The `COMMANDS` object (mapping category keys like `fps`, `hitbox`, `hz90`, `network` to arrays of ADB shell commands) is defined **twice**:

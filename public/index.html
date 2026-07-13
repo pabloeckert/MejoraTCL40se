@@ -359,6 +359,11 @@
         Detectar TCL 40 SE
       </button>
     </div>
+    <div class="status-row" id="owner-row" style="display:none; margin-top:12px;">
+      <input type="text" id="owner-input" placeholder="Nombre del dueño (ej: Aarón)"
+        style="flex:1; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:0.85rem;">
+      <button class="btn btn-cyan" onclick="saveOwnerName()">Guardar nombre</button>
+    </div>
   </div>
 
   <!-- OPCIONES -->
@@ -441,6 +446,17 @@
     </div>
     <div class="log-block" id="log-block" style="margin-top:14px;">
       <span style="color:#9ca3af; font-style:italic; font-size:0.78rem;">El log aparecerá aquí al ejecutar...</span>
+    </div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="card">
+    <div class="card-title">Historial de Mantenimiento</div>
+    <div class="exec-actions">
+      <button class="btn btn-cyan" onclick="loadHistory()">Cargar historial</button>
+    </div>
+    <div class="preview-block" id="history-block">
+      <span class="preview-empty">Sin datos cargados todavía...</span>
     </div>
   </div>
 
@@ -540,11 +556,15 @@
     });
   }
 
+  let currentDeviceId = null;
+
   async function detectDevice() {
     const dot = document.getElementById('status-dot');
     const statusText = document.getElementById('status-text');
     const modelEl = document.getElementById('device-model');
     const btn = document.getElementById('btn-connect');
+    const ownerRow = document.getElementById('owner-row');
+    const ownerInput = document.getElementById('owner-input');
 
     btn.disabled = true;
     statusText.textContent = 'Detectando...';
@@ -556,21 +576,70 @@
       const data = await res.json();
 
       if (data.success && data.count > 0) {
+        const dev = data.devices[0];
+        currentDeviceId = dev.id;
         dot.className = 'status-dot connected';
         statusText.textContent = 'Conectado';
-        modelEl.textContent = data.devices[0].model !== 'Desconocido'
-          ? data.devices[0].model
-          : data.devices[0].id;
+        const label = dev.model !== 'Desconocido' ? dev.model : dev.id;
+        modelEl.textContent = dev.owner ? `${dev.owner} — ${label}` : label;
+
+        ownerRow.style.display = 'flex';
+        ownerInput.value = dev.owner || '';
       } else {
         dot.className = 'status-dot error';
         statusText.textContent = 'No se encontró ningún dispositivo';
         modelEl.textContent = '';
+        currentDeviceId = null;
+        ownerRow.style.display = 'none';
       }
     } catch (e) {
       dot.className = 'status-dot error';
       statusText.textContent = 'Error: ' + e.message;
     } finally {
       btn.disabled = false;
+    }
+  }
+
+  async function saveOwnerName() {
+    if (!currentDeviceId) return;
+    const name = document.getElementById('owner-input').value.trim();
+    if (!name) return;
+    try {
+      const res = await fetch(`/api/devices/${currentDeviceId}/name`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const modelEl = document.getElementById('device-model');
+        const current = modelEl.textContent.split(' — ').pop();
+        modelEl.textContent = `${data.owner} — ${current}`;
+      }
+    } catch (_) {}
+  }
+
+  async function loadHistory() {
+    const block = document.getElementById('history-block');
+    block.innerHTML = 'Cargando...';
+    try {
+      const res = await fetch('/api/history');
+      const data = await res.json();
+      if (!data.success || data.history.length === 0) {
+        block.innerHTML = '<span class="preview-empty">Sin historial todavía. Conectá un dispositivo primero.</span>';
+        return;
+      }
+      const lines = data.history.map(h => {
+        const date = new Date(h.timestamp).toLocaleString('es-AR');
+        const owner = h.owner || 'Sin nombre';
+        const bat = h.batteryLevel != null ? h.batteryLevel + '%' : '-';
+        const mem = h.memAvailableMB != null ? h.memAvailableMB + 'MB libres' : '-';
+        const stor = h.storage ? h.storage.usePercent + '% almacenamiento' : '-';
+        return `${date}  |  ${owner} (${h.model})  |  Batería ${bat}  |  RAM ${mem}  |  ${stor}`;
+      });
+      block.textContent = lines.join('\n');
+    } catch (e) {
+      block.innerHTML = '<span class="preview-empty">Error cargando historial.</span>';
     }
   }
 
