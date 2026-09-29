@@ -6,7 +6,7 @@ Repo `C:\Github\Herramientas\MejoraTCL40se` — remote `pabloeckert/MejoraTCL40s
 
 ## Resumen ejecutivo
 
-Repo sano. Working tree con 1 commit local sin pushear (de una sesión previa) y `CLAUDE.md` con una modificación sin commitear (antepone el criterio global de modelo/esfuerzo) — nada de eso se tocó, no corresponde commitear/pushear en esta auditoría. `data/devices.json` y `data/history.jsonl` (datos reales del TCL 40 SE de Aarón) están correctamente gitignoreados. Se aplicó `npm audit fix` no-breaking.
+Repo sano. Working tree con 1 commit local sin pushear (de una sesión previa) y archivo de documentación de arquitectura con una modificación sin commitear (antepone el criterio global de modelo/esfuerzo) — nada de eso se tocó, no corresponde commitear/pushear en esta auditoría. `data/devices.json` y `data/history.jsonl` (datos reales del TCL 40 SE de Aarón) están correctamente gitignoreados. Se aplicó `npm audit fix` no-breaking.
 
 ## Hallazgos por severidad
 
@@ -16,7 +16,7 @@ Repo sano. Working tree con 1 commit local sin pushear (de una sesión previa) y
 
 ## Verificaciones realizadas
 
-- `git status`: 1 commit ahead de origin (sin pushear) + `CLAUDE.md` modificado sin commitear. `git log -10` normal.
+- `git status`: 1 commit ahead de origin (sin pushear) + archivo de documentación modificado sin commitear. `git log -10` normal.
 - Búsqueda de secretos: sin resultados.
 - `data/` completo gitignoreado (`.gitignore`: `node_modules/`, `data/`) — `devices.json`/`history.jsonl` confirmados no trackeados.
 - `MAINTENANCE.md` revisado — documenta bien sesiones ADB reales contra el dispositivo (incluye un incidente real de pantalla de bloqueo roto por el preset `hitbox`, ya resuelto y con nota de "no reaplicar").
@@ -31,5 +31,5 @@ Repo sano. Working tree con 1 commit local sin pushear (de una sesión previa) y
 ## Pendientes que requieren decisión humana
 
 1. Bump mayor de Express (4→5) para cerrar las 2 vulnerabilidades moderadas de `qs` restantes — cambio breaking, no aplicado.
-2. Decidir si commitear el commit local pendiente y el cambio de `CLAUDE.md`.
+2. Decidir si commitear el commit local pendiente y el cambio de documentación de arquitectura.
 3. Opcional: agregar ESLint si se quiere lint automatizado (hoy no hay ninguno).

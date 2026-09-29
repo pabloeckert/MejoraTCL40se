@@ -146,7 +146,7 @@ Tras el incidente de `hitbox`, se decidió no automatizar ningún comando
 sobre el teléfono sin supervisión (riesgo de dejarlo inutilizable estando
 Aarón solo). En su lugar se construyó un **registro de dispositivos +
 historial de uso** (nueva funcionalidad en `server.js`/`public/index.html`,
-ver `CLAUDE.md` sección "Device registry and usage history"):
+ver documentación de arquitectura sección "Device registry and usage history"):
 
 - `data/devices.json` — identifica este equipo (serie `YD79CE9LGMROBEO7`) como
   perteneciente a **Aarón**, para distinguirlo del otro TCL 40 SE idéntico de
